@@ -3,6 +3,7 @@ package com.samsung.open_crypto_wallet_app;
 import android.app.Activity;
 import android.util.Log;
 
+import com.samsung.android.sdk.coldwallet.Scw;
 import com.samsung.android.sdk.coldwallet.ScwCoinType;
 import com.samsung.android.sdk.coldwallet.ScwService;
 import com.samsung.open_crypto_wallet_app.model.AccountModel;
@@ -16,6 +17,7 @@ import java8.util.concurrent.CompletableFuture;
 public class DBManager {
     private static Activity mNavActivityInstance;
     private static AccountModel mAccountModel;
+    private static String hdPath;
 
     public static void setNavActivityInstance(Activity mNavActivityInstance) {
         DBManager.mNavActivityInstance = mNavActivityInstance;
@@ -122,6 +124,12 @@ public class DBManager {
         if(!SharedPreferenceManager.getUseOtherKeyManager(mNavActivityInstance)) {
 
             // TODO : Get HDPath from Keystore using getHdPath API and ScwCoinType class
+            hdPath = ScwService.getHdPath(ScwCoinType.ETH,0); // String return type
+            // Ex ) String hdPath = ~
+            Log.d("DBManager","hdpath : " + hdPath);
+            mAccountModel.setHdPath(hdPath);
+            
+            
             //mAccountModel.setHdPath(hdPath);
 
             // Get Public Address from SBK for specific HDpath

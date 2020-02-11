@@ -5,6 +5,8 @@ import android.databinding.ObservableBoolean;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.samsung.android.sdk.coldwallet.Scw;
+import com.samsung.android.sdk.coldwallet.ScwCoinType;
 import com.samsung.android.sdk.coldwallet.ScwService;
 import com.samsung.open_crypto_wallet_app.view.AlertUtil;
 import com.samsung.open_crypto_wallet_app.view_model.AccountViewModel;
@@ -15,8 +17,10 @@ import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.tx.ChainId;
+import org.web3j.utils.Numeric;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public class KeyStoreManager {
@@ -134,6 +138,25 @@ public class KeyStoreManager {
             // TODO : Get My Ethereum Address with Keystore
             // success, Update DBManager > DBManager.onGetAddressSuccess(publicAddress);
             // fail, show alert with errorCode > AlertUtil.handleSBKError(errorCode);
+
+            ArrayList<String > hdPathList = new ArrayList<>();
+            hdPathList.add(hdPath);
+            Log.d("KeyStoreManager","hdPath" +hdPath);
+
+            ScwService.getInstance().getAddressList(new ScwService.ScwGetAddressListCallback() {
+                @Override
+                public void onSuccess(List<String>addressList) {
+                    String publicAddress = addressList.get(0);
+                    Log.d("KeyStoreManager", "public address" + publicAddress);
+                    DBManager.onGetAddressSuccess(publicAddress);
+                }
+
+                @Override
+                public void onFailure(int errorCode, @Nullable String s) {
+                    AlertUtil.handleSBKError(errorCode);
+
+                }
+            }, hdPathList);
         }
     }
 
@@ -158,6 +181,24 @@ public class KeyStoreManager {
             // TODO : Sign Transaction with Keystore
             // Success, Set signed tx to TransactionViewModel > TransactionViewModel.setSignedTransaction(bytes);
             // Fail, Show alert with error code > AlertUtil.handleSBKError(errorCode);
+            String unsignedTxHex = Numeric.toHexString(unsignedTransaction);
+            String hdPath = ScwService.getHdPath(ScwCoinType.ETH, 0);
+            Log.d("KeystoreManager", "unsigned tx + " + unsignedTxHex);
+
+            ScwService.getInstance().signEthPersonalMessage(new ScwService.ScwSignEthPersonalMessageCallback() {
+                @Override
+                public void onSuccess(byte[] bytes) {
+                    String singedTxHex = Numeric.toHexString(bytes);
+                    Log.d("KeystoreManager","signed tx + " + singedTxHex);
+                    TransactionViewModel.setSignedTransaction(bytes);
+                }
+
+                @Override
+                public void onFailure(int errorCode, @Nullable String s) {
+                    AlertUtil.handleSBKError(errorCode);
+
+                }
+            }, unsignedTransaction, hdPath);
         }
     }
 
